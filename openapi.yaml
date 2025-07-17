@@ -1,0 +1,352 @@
+openapi: 3.1.0
+info:
+  title: Kancelaria API
+  description: API for managing law firms and clients.
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:8000/api/v1
+    description: Local development server
+tags:
+  - name: kancelarie
+    description: Operations related to law firms.
+  - name: users
+    description: User authentication and management.
+paths:
+  /users/register:
+    post:
+      summary: Register a new user
+      operationId: register_user
+      tags:
+        - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreate"
+        required: true
+      responses:
+        "201":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInDB"
+        "400":
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /users/token:
+    post:
+      summary: Authenticate user and get access token
+      operationId: login_for_access_token
+      tags:
+        - users
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Token"
+        "401":
+          description: Incorrect username or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /users/me:
+    get:
+      summary: Get current user
+      operationId: read_users_me
+      tags:
+        - users
+      security:
+        - OAuth2PasswordBearer: []
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInDB"
+        "401":
+          description: Could not validate credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+        "400":
+          description: Inactive user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /kancelarie:
+    get:
+      summary: Retrieve all law firms
+      operationId: read_kancelarie
+      tags:
+        - kancelarie
+      security:
+        - OAuth2PasswordBearer: []
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KancelariaInDB"
+    post:
+      summary: Create a new law firm
+      operationId: create_kancelaria
+      tags:
+        - kancelarie
+      security:
+        - OAuth2PasswordBearer: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KancelariaCreate"
+        required: true
+      responses:
+        "201":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KancelariaInDB"
+  /kancelarie/{kancelaria_id}:
+    get:
+      summary: Retrieve a specific law firm by ID
+      operationId: read_kancelaria
+      tags:
+        - kancelarie
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: kancelaria_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the law firm to retrieve.
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KancelariaInDB"
+        "404":
+          description: Kancelaria not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    put:
+      summary: Update an existing law firm by ID
+      operationId: update_kancelaria
+      tags:
+        - kancelarie
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: kancelaria_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the law firm to update.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KancelariaUpdate"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KancelariaInDB"
+        "404":
+          description: Kancelaria not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    delete:
+      summary: Delete a law firm by ID
+      operationId: delete_kancelaria
+      tags:
+        - kancelarie
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: kancelaria_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the law firm to delete.
+      responses:
+        "204":
+          description: Successful Response (No Content)
+        "404":
+          description: Kancelaria not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+components:
+  securitySchemes:
+    OAuth2PasswordBearer:
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: /api/v1/users/token
+          scopes: {}
+  schemas:
+    KancelariaBase:
+      title: KancelariaBase
+      type: object
+      properties:
+        name:
+          type: string
+          example: Law Firm A
+        location:
+          type: string
+          example: Warsaw, Poland
+        specialization:
+          type: string
+          example: Criminal Law
+      required:
+        - name
+        - location
+        - specialization
+    KancelariaCreate:
+      title: KancelariaCreate
+      allOf:
+        - $ref: "#/components/schemas/KancelariaBase"
+    KancelariaUpdate:
+      title: KancelariaUpdate
+      type: object
+      properties:
+        name:
+          type: string
+          example: Law Firm A
+        location:
+          type: string
+          example: Warsaw, Poland
+        specialization:
+          type: string
+          example: Criminal Law
+    KancelariaInDB:
+      title: KancelariaInDB
+      allOf:
+        - $ref: "#/components/schemas/KancelariaBase"
+        - type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+          required:
+            - id
+    UserBase:
+      title: UserBase
+      type: object
+      properties:
+        email:
+          type: string
+          example: user@example.com
+      required:
+        - email
+    UserCreate:
+      title: UserCreate
+      allOf:
+        - $ref: "#/components/schemas/UserBase"
+        - type: object
+          properties:
+            password:
+              type: string
+              example: securepassword
+          required:
+            - password
+    UserInDB:
+      title: UserInDB
+      allOf:
+        - $ref: "#/components/schemas/UserBase"
+        - type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            is_active:
+              type: boolean
+              default: true
+              example: true
+          required:
+            - id
+            - is_active
+    Token:
+      title: Token
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          default: bearer
+      required:
+        - access_token
+        - token_type
+    TokenData:
+      title: TokenData
+      type: object
+      properties:
+        email:
+          type: string
+    HTTPValidationError:
+      title: HTTPValidationError
+      type: object
+      properties:
+        detail:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationError"
+    ValidationError:
+      title: ValidationError
+      type: object
+      properties:
+        loc:
+          type: array
+          items:
+            type: string
+        msg:
+          type: string
+        type:
+          type: string
+      required:
+        - loc
+        - msg
+        - type
