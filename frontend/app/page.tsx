@@ -510,7 +510,7 @@ export default function HomePage() {
       author: "Dr hab. Marek Kowalski",
       date: "15 stycznia 2024",
       description:
-        "Kompleksowy przewodnik po specyfice postępowania przed sądami cywilnymi w Gdańsku, uwzględniający lokalne praktyki orzecznicze.",
+        "Kompleksowy przewodnik po specyfikie postępowania przed sądami cywilnymi w Gdańsku, uwzględniający lokalne praktyki orzecznicze.",
       difficulty: "Średni",
       downloads: 1247,
     },
